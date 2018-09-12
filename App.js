@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import ToastExample from './ToastExample';
 import MyLBS from './BaiduLbs'
+import TTLock from './TTLock'
 
 const instructions = Platform.select({
     ios: 'Press Cmd+R to reload,\n' +
@@ -31,7 +32,10 @@ export default class App extends Component<{}> {
 
     async componentDidMount() {
         console.warn('console.error ==> Screen height is:22');
-
+        TTLock.init()
+        TTLock.requestBleEnable()
+        TTLock.startBleService()
+        TTLock.startBTDeviceScan()
         try {
             var result = await MyLBS.getTestString();
             this.setState({ location: result })

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class BaiduLBSReactPackage implements ReactPackage {
+class TTLockReactPackage implements ReactPackage {
 
     @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
@@ -22,7 +22,7 @@ class BaiduLBSReactPackage implements ReactPackage {
             ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
 
-        modules.add(new BaiduLBS(reactContext));
+        modules.add(new TTLock(reactContext));
 
         return modules;
     }
