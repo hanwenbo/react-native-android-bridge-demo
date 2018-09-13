@@ -5,28 +5,29 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.content.Intent;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.BaseActivityEventListener;
+import com.facebook.react.bridge.ActivityEventListener;
 
+import com.facebook.react.bridge.WritableMap;
 import com.ttlock.bl.sdk.api.TTLockAPI;
 import com.ttlock.bl.sdk.callback.TTLockCallback;
 import com.ttlock.bl.sdk.entity.DeviceInfo;
 import com.ttlock.bl.sdk.entity.Error;
 import com.ttlock.bl.sdk.entity.LockData;
 import com.ttlock.bl.sdk.scanner.ExtendedBluetoothDevice;
-import com.ttlock.bl.sdk.util.LogUtil;
-
-import java.util.List;
 
 public class TTLock extends ReactContextBaseJavaModule {
-    private static boolean DBG = true;
 
     public static Context mContext;
-    private Activity curActivity;
-
+    private Promise mTTLockPromise;
     /**
      * TTLockAPI
      */
@@ -35,46 +36,10 @@ public class TTLock extends ReactContextBaseJavaModule {
     // 2 Instantiate TTLockCallback Object
     public TTLock(ReactApplicationContext reactContext) {
         super(reactContext);
+        //给上下文对象赋值
+        TTLockSendEvent.myContext=getReactApplicationContext();
     }
-    Application.ActivityLifecycleCallbacks callbacks = new Application.ActivityLifecycleCallbacks() {
-        @Override
-        public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
 
-        }
-
-        @Override
-        public void onActivityStarted(Activity activity) {
-
-        }
-
-        @Override
-        public void onActivityResumed(Activity activity) {
-            curActivity = activity;
-            Log.d("TAG","activity:" + activity.getClass());
-        }
-
-        @Override
-        public void onActivityPaused(Activity activity) {
-
-        }
-
-        @Override
-        public void onActivityStopped(Activity activity) {
-
-        }
-
-        @Override
-        public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-
-        }
-
-        @Override
-        public void onActivityDestroyed(Activity activity) {
-            //TODO:
-            LogUtil.d("activity:" + activity.getClass(), DBG);
-//            curActivity = null;
-        }
-    };
 
 
     // 3 Init TTLockAPI Object
@@ -86,16 +51,19 @@ public class TTLock extends ReactContextBaseJavaModule {
     // 4 Turn on Bluetooth
     @ReactMethod
     public void requestBleEnable() {
-        mTTLockAPI.requestBleEnable(curActivity);
+        Log.d("TGA", "requestBleEnable");
+        mTTLockAPI.requestBleEnable(getCurrentActivity());
     }
     // 5 Start Bluetooth Service
     @ReactMethod
     public void startBleService() {
+        Log.d("TGA", "startBleService");
         mTTLockAPI.startBleService(mContext);
     }
     // 6 Start Bluetooth Scan
     @ReactMethod
     public void startBTDeviceScan() {
+        Log.d("TGA", "startBTDeviceScan");
         mTTLockAPI.startBTDeviceScan();
     }
 
@@ -115,6 +83,10 @@ public class TTLock extends ReactContextBaseJavaModule {
         @Override
         public void onFoundDevice(ExtendedBluetoothDevice extendedBluetoothDevice) {
             Log.d("TGA", "onFoundDevice");
+            //发送事件,事件名为EventName
+            WritableMap et= Arguments.createMap();
+            TTLockSendEvent event = new TTLockSendEvent();
+            event.sendEvent(getReactApplicationContext(),"EventName",et);
         }
 
         @Override
@@ -388,9 +360,17 @@ public class TTLock extends ReactContextBaseJavaModule {
         }
     };
 
+    private final ActivityEventListener mActivityEventListener = new BaseActivityEventListener() {
+        @Override
+        public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent intent) {
+
+        }
+    };
+
     @Override
     public String getName() {
         return "TTLock";
     }
+
 
 }

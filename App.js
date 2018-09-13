@@ -9,7 +9,8 @@ import {
     Platform,
     StyleSheet,
     Text,
-    View
+    View,
+    DeviceEventEmitter
 } from 'react-native';
 import ToastExample from './ToastExample';
 import MyLBS from './BaiduLbs'
@@ -29,7 +30,15 @@ export default class App extends Component<{}> {
             location: null,
         }
     }
+    componentWillMount(){
+        //监听事件名为EventName的事件
+        DeviceEventEmitter.addListener('EventName', function() {
 
+            alert("send success");
+        });
+
+
+    }
     async componentDidMount() {
         console.warn('console.error ==> Screen height is:22');
         TTLock.init()
@@ -56,9 +65,18 @@ export default class App extends Component<{}> {
     render() {
         ToastExample.show('Awesome', ToastExample.SHORT);
         if (this.state.location) {
-            return <Text>
+            return <View><Text>
                 {this.state.location}
             </Text>
+                <Text style={styles.scan} onPress={()=>{
+                    TTLock.init()
+                    TTLock.requestBleEnable()
+                    TTLock.startBleService()
+                    TTLock.startBTDeviceScan()
+                    ToastExample.show('扫描锁', ToastExample.SHORT);
+
+                }}>扫描锁11</Text>
+            </View>
         } else {
             return <View>
                 <Text>你好!</Text>
@@ -97,4 +115,8 @@ const styles = StyleSheet.create({
         color: '#333333',
         marginBottom: 5,
     },
+    scan:{
+        backgroundColor: '#000',
+        color:'#FFF'
+    }
 });
