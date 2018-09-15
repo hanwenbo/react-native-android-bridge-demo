@@ -1,14 +1,11 @@
 package com.baidu2;
 
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
-import android.os.Bundle;
 import android.util.Log;
 import android.content.Intent;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -27,6 +24,7 @@ import com.ttlock.bl.sdk.scanner.ExtendedBluetoothDevice;
 public class TTLock extends ReactContextBaseJavaModule {
 
     public static Context mContext;
+    public static ExtendedBluetoothDevice mExtendedBluetoothDevice;
     private Promise mTTLockPromise;
     /**
      * TTLockAPI
@@ -36,10 +34,8 @@ public class TTLock extends ReactContextBaseJavaModule {
     // 2 Instantiate TTLockCallback Object
     public TTLock(ReactApplicationContext reactContext) {
         super(reactContext);
-        //给上下文对象赋值
-        TTLockSendEvent.myContext=getReactApplicationContext();
+        TTLockSendEvent.myContext = getReactApplicationContext();
     }
-
 
 
     // 3 Init TTLockAPI Object
@@ -48,26 +44,52 @@ public class TTLock extends ReactContextBaseJavaModule {
         mContext = getReactApplicationContext();
         initTTLock();
     }
+
     // 4 Turn on Bluetooth
     @ReactMethod
     public void requestBleEnable() {
-        Log.d("TGA", "requestBleEnable");
         mTTLockAPI.requestBleEnable(getCurrentActivity());
     }
+
     // 5 Start Bluetooth Service
     @ReactMethod
     public void startBleService() {
-        Log.d("TGA", "startBleService");
         mTTLockAPI.startBleService(mContext);
     }
+
     // 6 Start Bluetooth Scan
     @ReactMethod
     public void startBTDeviceScan() {
-        Log.d("TGA", "startBTDeviceScan");
         mTTLockAPI.startBTDeviceScan();
     }
+    // 通过mac地址连接设备
+    @ReactMethod
+    public void connect(String address) {
+        mTTLockAPI.connect(address);
 
+    }
+    // 通过ExtendedBluetoothDevice对象连接设备 本次用不到 不写
+    @ReactMethod
+    public void connect(ExtendedBluetoothDevice device){
 
+    }
+    // 断开蓝牙连接
+    @ReactMethod
+    public void disconnect(){
+        mTTLockAPI.disconnect();
+        TTLockSendEvent event = new TTLockSendEvent();
+        event.sendEvent(getReactApplicationContext(), "disconnectSuccess",null);
+    }
+    // Lock Initialize 用不到 不实现
+    @ReactMethod
+    public void lockInitialize(ExtendedBluetoothDevice extendedBluetoothDevice){
+
+    }
+    // Ekey 解锁
+    @ReactMethod
+    public void unlockByUser(int uid,String lockVersion,int startDate, int endDate, String unlockKey, int lockFlagPos, String aesKeyStr, int timezoneOffset){
+        mTTLockAPI.unlockByUser(mExtendedBluetoothDevice,uid,lockVersion,new Long((long)startDate),new Long((long)endDate),unlockKey,lockFlagPos,aesKeyStr,new Long((long)timezoneOffset));
+    }
     /**
      * TTLock initial
      */
@@ -83,20 +105,29 @@ public class TTLock extends ReactContextBaseJavaModule {
         @Override
         public void onFoundDevice(ExtendedBluetoothDevice extendedBluetoothDevice) {
             Log.d("TGA", "onFoundDevice");
-            //发送事件,事件名为EventName
-            WritableMap et= Arguments.createMap();
+            WritableMap map = Arguments.createMap();
+            map.putString("name", extendedBluetoothDevice.getName());
+            map.putString("address", extendedBluetoothDevice.getAddress());
+            map.putInt("remoteUnlockSwitch", extendedBluetoothDevice.getRemoteUnlockSwitch());
+            map.putInt("lockType", extendedBluetoothDevice.getLockType());
+            map.putInt("date", (int) extendedBluetoothDevice.getDate());
+            map.putInt("parkStatus", extendedBluetoothDevice.getParkStatus());
             TTLockSendEvent event = new TTLockSendEvent();
-            event.sendEvent(getReactApplicationContext(),"EventName",et);
+            event.sendEvent(getReactApplicationContext(), "onFoundDevice", map);
         }
 
         @Override
         public void onDeviceConnected(ExtendedBluetoothDevice extendedBluetoothDevice) {
-
+            mExtendedBluetoothDevice = extendedBluetoothDevice;
+            TTLockSendEvent event = new TTLockSendEvent();
+            event.sendEvent(getReactApplicationContext(), "onDeviceConnected",null);
         }
 
         @Override
         public void onDeviceDisconnected(ExtendedBluetoothDevice extendedBluetoothDevice) {
-
+            mExtendedBluetoothDevice = null;
+            TTLockSendEvent event = new TTLockSendEvent();
+            event.sendEvent(getReactApplicationContext(), "onDeviceDisconnected",null);
         }
 
         @Override
@@ -131,7 +162,8 @@ public class TTLock extends ReactContextBaseJavaModule {
 
         @Override
         public void onUnlock(ExtendedBluetoothDevice extendedBluetoothDevice, int i, int i1, long l, Error error) {
-
+            TTLockSendEvent event = new TTLockSendEvent();
+            event.sendEvent(getReactApplicationContext(), "onUnlock",null);
         }
 
         @Override

@@ -32,8 +32,8 @@ export default class App extends Component<{}> {
     }
     componentWillMount(){
         //监听事件名为EventName的事件
-        DeviceEventEmitter.addListener('EventName', function() {
-
+        DeviceEventEmitter.addListener('EventName', function(e) {
+            console.warn(e)
             alert("send success");
         });
 
