@@ -28,17 +28,41 @@ export default class App extends Component<{}> {
         super(props);
         this.state = {
             location: null,
+            connect: false,
+            lockMac: 'C4:54:12:32:3B:D8',
+            lockVersion: {
+                showAdminKbpwdFlag: true,
+                groupId: 1,
+                protocolVersion: 3,
+                protocolType: 5,
+                orgId: 1,
+                logoUrl: "",
+                scene: 2
+            }
         }
     }
-    componentWillMount(){
+
+    componentWillMount() {
+        let lockVersion = JSON.stringify(this.state.lockVersion)
+        console.warn(lockVersion)
+        // TTLock.unlockByUser(1700436704, JSON.stringify(lockVersion), 1537104120000, 1537190520000, 'MTE1LDExNywxMTUsMTEzLDEyMywxMTgsMTEzLDExMywxMTcsMTE1LDYx', 0, '4c,27,28,ae,66,82,39,b2,3b,bf,3d,41,78,d7,13,b7', 28800000)
         //监听事件名为EventName的事件
-        DeviceEventEmitter.addListener('EventName', function(e) {
+        DeviceEventEmitter.addListener('onFoundDevice', function (e) {
             console.warn(e)
-            alert("send success");
+            console.warn("发现锁")
+        });
+        DeviceEventEmitter.addListener('onDeviceConnected', function (e) {
+            console.warn('链接成功')
+            // 由于rn的类型比较局限 所以这里使用字符串代替int long 类型，为了解决长度问题
+            TTLock.unlockByUser("1700436704", lockVersion, "1537104120000", "1537190520000", 'MTE1LDExNywxMTUsMTEzLDEyMywxMTgsMTEzLDExMywxMTcsMTE1LDYx', 0, '4c,27,28,ae,66,82,39,b2,3b,bf,3d,41,78,d7,13,b7', "28800000")
+        });
+        DeviceEventEmitter.addListener('onUnlock', function (e) {
+            console.warn('开锁成功')
+            alert("开锁成功");
         });
 
-
     }
+
     async componentDidMount() {
         console.warn('console.error ==> Screen height is:22');
         TTLock.init()
@@ -49,33 +73,37 @@ export default class App extends Component<{}> {
             var result = await MyLBS.getTestString();
             this.setState({ location: result })
             console.warn(result)
-          } catch (e) {
+        } catch (e) {
             console.error(e);
-          }
+        }
 
 
-    //    console.warn(MyLBS)
+        //    console.warn(MyLBS)
 //            var result = await MyLBS.getTestString()
 //            console.warn(result)
-            MyLBS.startLocation((location) => {
-                this.setState({ location: location })
-            });
+        MyLBS.startLocation((location) => {
+            this.setState({ location: location })
+        });
     }
 
     render() {
-        ToastExample.show('Awesome', ToastExample.SHORT);
         if (this.state.location) {
             return <View><Text>
                 {this.state.location}
             </Text>
-                <Text style={styles.scan} onPress={()=>{
+                <Text style={styles.scan} onPress={() => {
                     TTLock.init()
                     TTLock.requestBleEnable()
                     TTLock.startBleService()
                     TTLock.startBTDeviceScan()
-                    ToastExample.show('扫描锁', ToastExample.SHORT);
+                    ToastExample.show('扫描锁', 2);
 
                 }}>扫描锁11</Text>
+                <Text style={styles.scan} onPress={() => {
+                    TTLock.connect(this.state.lockMac)
+                    ToastExample.show('开锁', 2);
+
+                }}>开锁</Text>
             </View>
         } else {
             return <View>
@@ -115,8 +143,8 @@ const styles = StyleSheet.create({
         color: '#333333',
         marginBottom: 5,
     },
-    scan:{
+    scan: {
         backgroundColor: '#000',
-        color:'#FFF'
+        color: '#FFF'
     }
 });

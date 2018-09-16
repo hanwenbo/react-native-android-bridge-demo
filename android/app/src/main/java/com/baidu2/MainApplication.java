@@ -58,7 +58,6 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
       Log.e("xxxx","onActivityCreated");
-
       curActivity = activity;
     }
 

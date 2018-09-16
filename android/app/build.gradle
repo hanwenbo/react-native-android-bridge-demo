@@ -153,6 +153,7 @@ dependencies {
     compile "com.facebook.react:react-native:+"  // From node_modules
     compile(name:"ttlock-gateway-sdk-2.0",ext:"aar")
     compile(name:"ttlock-sdk-2.0",ext:"aar")
+    compile 'com.google.code.gson:gson:2.6.2'
 }
 
 // Run this once to be able to run the application with BUCK

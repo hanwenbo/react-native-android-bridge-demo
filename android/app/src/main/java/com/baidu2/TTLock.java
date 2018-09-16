@@ -62,34 +62,45 @@ public class TTLock extends ReactContextBaseJavaModule {
     public void startBTDeviceScan() {
         mTTLockAPI.startBTDeviceScan();
     }
+
     // 通过mac地址连接设备
     @ReactMethod
     public void connect(String address) {
         mTTLockAPI.connect(address);
 
     }
-    // 通过ExtendedBluetoothDevice对象连接设备 本次用不到 不写
-    @ReactMethod
-    public void connect(ExtendedBluetoothDevice device){
 
-    }
     // 断开蓝牙连接
     @ReactMethod
-    public void disconnect(){
+    public void disconnect() {
         mTTLockAPI.disconnect();
         TTLockSendEvent event = new TTLockSendEvent();
-        event.sendEvent(getReactApplicationContext(), "disconnectSuccess",null);
+        event.sendEvent(getReactApplicationContext(), "disconnectSuccess", null);
     }
+
     // Lock Initialize 用不到 不实现
     @ReactMethod
-    public void lockInitialize(ExtendedBluetoothDevice extendedBluetoothDevice){
+    public void lockInitialize(ExtendedBluetoothDevice extendedBluetoothDevice) {
 
     }
+
     // Ekey 解锁
     @ReactMethod
-    public void unlockByUser(int uid,String lockVersion,int startDate, int endDate, String unlockKey, int lockFlagPos, String aesKeyStr, int timezoneOffset){
-        mTTLockAPI.unlockByUser(mExtendedBluetoothDevice,uid,lockVersion,new Long((long)startDate),new Long((long)endDate),unlockKey,lockFlagPos,aesKeyStr,new Long((long)timezoneOffset));
+    public void unlockByUser(String uid, String lockVersion, String startDate, String endDate, String unlockKey, Integer lockFlagPos, String aesKeyStr, String timezoneOffset) {
+        Log.d("TGA", "unlockByUser");
+        Log.d("设备名字：", mExtendedBluetoothDevice.getName());
+        Log.d("uid：", "" + uid);
+        Log.d("startDate：", "" + new Long(startDate));
+        Log.d("endDate：", "" + new Long(endDate));
+        Log.d("timezoneOffset：", "" + new Long(timezoneOffset));
+        try {
+            mTTLockAPI.unlockByUser(mExtendedBluetoothDevice, new Integer(uid).intValue(), lockVersion, new Long(startDate), new Long(endDate), unlockKey, lockFlagPos.intValue(), aesKeyStr, new Long(timezoneOffset));
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e("TGA", e.getMessage());
+        }
     }
+
     /**
      * TTLock initial
      */
@@ -118,16 +129,18 @@ public class TTLock extends ReactContextBaseJavaModule {
 
         @Override
         public void onDeviceConnected(ExtendedBluetoothDevice extendedBluetoothDevice) {
+            Log.d("TGA", "onDeviceConnected");
             mExtendedBluetoothDevice = extendedBluetoothDevice;
             TTLockSendEvent event = new TTLockSendEvent();
-            event.sendEvent(getReactApplicationContext(), "onDeviceConnected",null);
+            event.sendEvent(getReactApplicationContext(), "onDeviceConnected", null);
         }
 
         @Override
         public void onDeviceDisconnected(ExtendedBluetoothDevice extendedBluetoothDevice) {
+            Log.d("TGA", "onDeviceDisconnected");
             mExtendedBluetoothDevice = null;
             TTLockSendEvent event = new TTLockSendEvent();
-            event.sendEvent(getReactApplicationContext(), "onDeviceDisconnected",null);
+            event.sendEvent(getReactApplicationContext(), "onDeviceDisconnected", null);
         }
 
         @Override
@@ -162,8 +175,14 @@ public class TTLock extends ReactContextBaseJavaModule {
 
         @Override
         public void onUnlock(ExtendedBluetoothDevice extendedBluetoothDevice, int i, int i1, long l, Error error) {
-            TTLockSendEvent event = new TTLockSendEvent();
-            event.sendEvent(getReactApplicationContext(), "onUnlock",null);
+            if (error == Error.SUCCESS) {
+                TTLockSendEvent event = new TTLockSendEvent();
+                event.sendEvent(getReactApplicationContext(), "onUnlock", null);
+            } else {
+                Log.d("onUnlock Error", error.getErrorMsg());
+            }
+
+
         }
 
         @Override
